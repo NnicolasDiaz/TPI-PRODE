@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prode UTN · World Cup 2026</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter','system-ui','sans-serif'] } } }
+    }
+  </script>
+  <style>
+    :root {
+      --bg:      #0b1120;
+      --surface: #111827;
+      --surface2:#1f2937;
+      --border:  #2d3748;
+      --border2: #4b5563;
+      --text:    #f9fafb;
+      --text2:   #9ca3af;
+      --text3:   #6b7280;
+      --accent:  #3b82f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* ── Auth ─────────────────────────────────── */
+    .auth-bg {
+      background: url('/Gemini_Generated_Image_sovmosovmosovmos.png') center/cover no-repeat;
+    }
+    .auth-bg::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(160deg, rgba(7,14,40,.55) 0%, rgba(10,20,60,.45) 60%, rgba(5,10,30,.6) 100%);
+      backdrop-filter: blur(1px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .glass {
+      background: rgba(255,255,255,.08);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    /* ── App shell ────────────────────────────── */
+    #main-app { background: var(--bg); min-height: 100vh; }
+
+    /* ── Animations ───────────────────────────── */
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes spin    { to{transform:rotate(360deg)} }
+    @keyframes pulse   { 0%,100%{opacity:1} 50%{opacity:.35} }
+    @keyframes shimmer { from{background-position:-200% 0} to{background-position:200% 0} }
+    @keyframes barGrow { from{width:0%} to{width:var(--bar-w)} }
+
+    .fade-up   { animation: fadeUp .3s ease both; }
+    .spin      { animation: spin .7s linear infinite; display:inline-block; }
+    .pulse-dot { animation: pulse 1.6s ease-in-out infinite; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 8px;
+    }
+
+    /* ── Navbar ───────────────────────────────── */
+    #app-header {
+      background: linear-gradient(90deg, #0b1837 0%, #0f2251 100%);
+      border-bottom: 1px solid rgba(59,130,246,.2);
+    }
+    .nav-active { background: rgba(59,130,246,.18) !important; color: #93c5fd !important; }
+
+    /* ── WC pill ──────────────────────────────── */
+    .wc-pill {
+      display:inline-flex; align-items:center;
+      background: linear-gradient(90deg,rgba(59,130,246,.25),rgba(99,102,241,.25));
+      border: 1px solid rgba(99,102,241,.4);
+      border-radius: 99px; padding: 2px 8px;
+      font-size:.6rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+      color: #a5b4fc;
+    }
+
+    /* ── Match card ───────────────────────────── */
+    .partido-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      transition: border-color .15s, box-shadow .15s, transform .15s;
+    }
+    .partido-card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 8px 36px rgba(0,0,0,.45);
+      transform: translateY(-1px);
+    }
+
+    /* ── Status badge ─────────────────────────── */
+    .sbadge {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:.65rem; font-weight:600; padding:3px 9px; border-radius:99px;
+    }
+    .sb-azul    { background:rgba(59,130,246,.15);  color:#60a5fa;  border:1px solid rgba(59,130,246,.3); }
+    .sb-verde   { background:rgba(16,185,129,.15);  color:#34d399;  border:1px solid rgba(16,185,129,.3); }
+    .sb-gris    { background:rgba(148,163,184,.1);  color:#94a3b8;  border:1px solid rgba(148,163,184,.2); }
+    .sb-naranja { background:rgba(251,146,60,.15);  color:#fb923c;  border:1px solid rgba(251,146,60,.3); }
+
+    /* ── Score display ────────────────────────── */
+    .score-big {
+      font-family:'Barlow Condensed',system-ui;
+      font-size:2.4rem; font-weight:900; color:var(--text);
+      letter-spacing:-0.02em; line-height:1;
+      text-shadow: 0 0 20px rgba(59,130,246,.25);
+    }
+
+    /* ── Score input (modal) ──────────────────── */
+    .score-input {
+      width:72px; text-align:center;
+      font-family:'Barlow Condensed',system-ui;
+      font-size:2.4rem; font-weight:800;
+      border: 2px solid #374151; border-radius:14px;
+      padding: 8px 4px; background:#111827; color:#f9fafb;
+      outline:none; transition:border-color .2s;
+    }
+    .score-input:focus { border-color:#3b82f6; }
+
+    /* ── Pronóstico result badge ──────────────── */
+    .pron-badge {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+      padding: 5px 12px; border-radius:99px;
+    }
+    .pb-exacto    { background:rgba(16,185,129,.15); color:#34d399; border:1px solid rgba(16,185,129,.35); }
+    .pb-tendencia { background:rgba(245,158,11,.15); color:#fbbf24; border:1px solid rgba(245,158,11,.35); }
+    .pb-fallo     { background:rgba(239,68,68,.12);  color:#f87171; border:1px solid rgba(239,68,68,.3); }
+
+    /* ── Admin inputs ─────────────────────────── */
+    .admin-input {
+      width:100%; border:1px solid var(--border); border-radius:12px;
+      padding: 10px 14px; font-size:.875rem;
+      background: #0b1120; color: var(--text);
+      outline:none; transition:border-color .2s;
+    }
+    .admin-input:focus { border-color: var(--accent); }
+    .admin-input::placeholder { color: var(--text3); }
+    .admin-select { appearance:none; }
+
+    .sub-active { background: var(--surface2) !important; color: #93c5fd !important; font-weight:600; }
+
+    /* ── Ranking ──────────────────────────────── */
+    .rank-row { border-bottom: 1px solid var(--border); transition:background .1s; }
+    .rank-row:last-child { border-bottom:0; }
+    .rank-row:hover { background: var(--surface2); }
+    .rank-bar-wrap { margin-top:4px; height:4px; border-radius:99px; background:rgba(255,255,255,.06); overflow:hidden; }
+    .rank-bar-fill {
+      height:100%; border-radius:99px;
+      background: linear-gradient(90deg,#f59e0b,#fbbf24);
+      width: var(--bar-w);
+      animation: barGrow .6s cubic-bezier(.34,1.1,.64,1) both;
+    }
+
+    /* ── Hero banner ──────────────────────────── */
+    .hero-banner {
+      background: linear-gradient(135deg, #0d1b3e 0%, #0b1837 60%, #0f2050 100%);
+      border: 1px solid rgba(59,130,246,.2);
+      border-radius: 16px; padding: 16px 20px; margin-bottom: 20px;
+      display:flex; align-items:center;
+    }
+    .hero-stat { flex:1; text-align:center; padding:0 8px; }
+    .hero-stat + .hero-stat { border-left:1px solid rgba(59,130,246,.15); }
+    .hero-stat-val {
+      font-family:'Barlow Condensed',system-ui;
+      font-size:2rem; font-weight:900; line-height:1; color:#f9fafb;
+    }
+    .hero-stat-lbl { font-size:.65rem; font-weight:600; text-transform:uppercase; letter-spacing:.07em; color:#6b7280; margin-top:3px; }
+
+    /* ── Fecha header ─────────────────────────── */
+    .fecha-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .fecha-bar    { width:3px; height:22px; border-radius:99px; background:var(--accent); flex-shrink:0; }
+
+    /* ── Toast ────────────────────────────────── */
+    #toast { transition:all .3s cubic-bezier(.34,1.56,.64,1); }
+    #toast.hidden { transform:translateY(80px); opacity:0; }
+
+    /* ── Thin scrollbar ───────────────────────── */
+    .thin-scroll::-webkit-scrollbar { width:4px; }
+    .thin-scroll::-webkit-scrollbar-track { background:transparent; }
+    .thin-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+
+    /* ── Responsive ───────────────────────────── */
+    @media (max-width:640px) {
+      .score-big { font-size:2rem; }
+      .team-name { font-size:.9rem; }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- ═══════════ LOGIN / REGISTRO ════════════════════ -->
+<div id="auth-screen" class="auth-bg relative min-h-screen flex items-center justify-center p-4">
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-blue-500 opacity-5 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-32 right-0 w-80 h-80 bg-indigo-500 opacity-5 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center mb-4">
+        <img src="/Gemini_Generated_Image_bavweybavweybavw.png" alt="Prode UTN" class="w-24 h-24 object-cover rounded-full shadow-2xl shadow-blue-900/60">
+      </div>
+      <h1 class="text-4xl font-extrabold text-white tracking-tight">Prode UTN</h1>
+      <p class="text-blue-300 text-sm mt-1 font-medium tracking-wide">FRVM · Programación 4 · World Cup 2026</p>
+    </div>
+
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div class="flex border-b border-slate-100">
+        <button id="tab-login-btn" onclick="showAuthTab('login')"
+          class="flex-1 py-4 text-sm font-semibold text-blue-700 border-b-2 border-blue-600 transition-all">
+          Iniciar Sesión
+        </button>
+        <button id="tab-register-btn" onclick="showAuthTab('register')"
+          class="flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent transition-all hover:text-slate-600">
+          Registrarse
+        </button>
+      </div>
+
+      <!-- Login -->
+      <div id="form-login" class="p-7">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email</label>
+            <div class="relative">
+              <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="login-email" type="email" placeholder="tu@email.com" autocomplete="email"
+                class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Contraseña</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="login-password" type="password" placeholder="••••••••" autocomplete="current-password"
+                class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            </div>
+          </div>
+          <div id="login-error" class="hidden flex items-center gap-2 text-red-600 text-xs bg-red-50 px-3 py-2.5 rounded-lg">
+            <i class="fas fa-exclamation-circle"></i><span id="login-error-msg"></span>
+          </div>
+          <button id="login-btn" onclick="login()"
+            class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-md">
+            <i class="fas fa-sign-in-alt mr-2"></i>Ingresar
+          </button>
+        </div>
+      </div>
+
+      <!-- Register -->
+      <div id="form-register" class="p-7 hidden">
+        <div class="space-y-3.5">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Nombre</label>
+              <input id="reg-nombre" type="text" placeholder="Juan"
+                class="w-full px-3.5 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Apellido</label>
+              <input id="reg-apellido" type="text" placeholder="Pérez"
+                class="w-full px-3.5 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Email</label>
+            <div class="relative">
+              <i class="fas fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="reg-email" type="email" placeholder="tu@email.com"
+                class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Contraseña</label>
+            <div class="relative">
+              <i class="fas fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+              <input id="reg-password" type="password" placeholder="Mínimo 6 caracteres"
+                class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <div id="register-error" class="hidden flex items-center gap-2 text-red-600 text-xs bg-red-50 px-3 py-2.5 rounded-lg">
+            <i class="fas fa-exclamation-circle"></i><span id="register-error-msg"></span>
+          </div>
+          <div id="register-ok" class="hidden flex items-center gap-2 text-green-700 text-xs bg-green-50 px-3 py-2.5 rounded-lg">
+            <i class="fas fa-check-circle"></i><span>¡Cuenta creada! Iniciá sesión.</span>
+          </div>
+          <button id="register-btn" onclick="register()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl text-sm transition-all shadow-md">
+            <i class="fas fa-user-plus mr-2"></i>Crear Cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APP PRINCIPAL ════════════════════════ -->
+<div id="main-app" class="hidden flex-col">
+
+  <!-- NAVBAR -->
+  <header id="app-header" class="sticky top-0 z-30">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+        <!-- Brand -->
+        <div class="flex items-center gap-3">
+          <img src="/Gemini_Generated_Image_bavweybavweybavw.png" alt="logo" class="w-9 h-9 rounded-full object-cover shadow-lg shadow-blue-900/50 flex-shrink-0">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-white font-bold text-base leading-none tracking-tight">Prode UTN</span>
+              <span class="wc-pill">WC 2026</span>
+            </div>
+            <div class="text-gray-500 text-xs leading-none mt-1">FRVM · Prog. 4</div>
+          </div>
+        </div>
+
+        <!-- Nav -->
+        <nav class="flex items-center gap-1">
+          <button onclick="showTab('partidos')" data-tab="partidos"
+            class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/10 transition-all">
+            <i class="fas fa-calendar-alt text-xs"></i><span class="hidden sm:inline">Partidos</span>
+          </button>
+          <button onclick="showTab('ranking')" data-tab="ranking"
+            class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/10 transition-all">
+            <i class="fas fa-trophy text-xs"></i><span class="hidden sm:inline">Ranking</span>
+          </button>
+          <button onclick="showTab('grupos')" data-tab="grupos"
+            class="nav-btn flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/10 transition-all">
+            <i class="fas fa-users text-xs"></i><span class="hidden sm:inline">Grupos</span>
+          </button>
+          <button id="admin-nav-btn" onclick="showTab('admin')" data-tab="admin"
+            class="nav-btn hidden flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium text-blue-200 hover:bg-white/10 transition-all">
+            <i class="fas fa-cog text-xs"></i><span class="hidden sm:inline">Admin</span>
+          </button>
+        </nav>
+
+        <!-- User -->
+        <div class="flex items-center gap-3">
+          <div class="text-right hidden md:block">
+            <div class="text-white text-sm font-semibold leading-tight" id="nav-username"></div>
+            <div class="text-blue-400 text-xs leading-tight" id="nav-role"></div>
+          </div>
+          <button onclick="logout()"
+            class="text-blue-300 hover:text-white text-xs font-medium px-3 py-2 rounded-xl hover:bg-white/10 transition-all">
+            <i class="fas fa-sign-out-alt mr-1 sm:mr-0"></i><span class="hidden sm:inline ml-1">Salir</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
+
+    <!-- ══ TAB PARTIDOS ════════════════════════════ -->
+    <div id="tab-partidos" class="tab-content">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Partidos</h2>
+          <p class="text-gray-400 text-sm mt-0.5">Hacé tus pronósticos antes del cierre</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="relative">
+            <i class="fas fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs pointer-events-none"></i>
+            <select id="filter-fecha" onchange="loadPartidos()"
+              class="admin-input admin-select pl-8 pr-8 py-2 text-sm w-auto cursor-pointer">
+              <option value="">Todas las jornadas</option>
+            </select>
+          </div>
+          <button onclick="loadPartidos()"
+            class="p-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-blue-400 hover:border-blue-500/50 transition-all bg-gray-900/50" title="Actualizar">
+            <i class="fas fa-sync-alt text-sm" id="refresh-icon"></i>
+          </button>
+        </div>
+      </div>
+      <div id="partidos-hero"></div>
+      <div id="partidos-container"></div>
+    </div>
+
+    <!-- ══ TAB RANKING ════════════════════════════ -->
+    <div id="tab-ranking" class="tab-content hidden">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Tabla de Posiciones</h2>
+          <p id="ranking-subtitle" class="text-gray-400 text-sm mt-0.5">Clasificación global de todos los jugadores</p>
+        </div>
+        <div class="flex bg-gray-800 rounded-xl p-1 gap-1 border border-gray-700/60">
+          <button id="rtab-general" onclick="showRankingSubTab('general')"
+            class="rtab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all bg-blue-600 text-white">
+            <i class="fas fa-globe mr-1.5"></i>General
+          </button>
+          <button id="rtab-jornada" onclick="showRankingSubTab('jornada')"
+            class="rtab-btn px-4 py-2 rounded-lg text-sm font-semibold transition-all text-gray-400 hover:text-white">
+            <i class="fas fa-calendar-week mr-1.5"></i>Por Jornada
+          </button>
+        </div>
+      </div>
+
+      <div id="ranking-jornada-selector" class="hidden mb-4">
+        <select id="ranking-fecha-select" onchange="onFechaRankingChange()" class="admin-input w-full md:w-80">
+          <option value="">— Seleccioná una jornada —</option>
+        </select>
+      </div>
+
+      <div class="rounded-2xl overflow-hidden border border-gray-700/60" style="background:var(--surface)">
+        <table class="w-full">
+          <thead>
+            <tr style="background:#0b1837;border-bottom:1px solid rgba(59,130,246,.2)">
+              <th class="py-3.5 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 w-16">#</th>
+              <th class="py-3.5 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Jugador</th>
+              <th class="py-3.5 px-5 text-center text-xs font-semibold uppercase tracking-wider text-yellow-400 w-36">
+                <i class="fas fa-star mr-1"></i>Puntos
+              </th>
+              <th class="py-3.5 px-5 text-center text-xs font-semibold uppercase tracking-wider text-emerald-400 w-28 hidden sm:table-cell">
+                <i class="fas fa-bullseye mr-1"></i>Exactos
+              </th>
+            </tr>
+          </thead>
+          <tbody id="ranking-body">
+            <tr><td colspan="4" class="py-12 text-center">
+              <div class="space-y-2 px-8">
+                <div class="skeleton h-10 w-full"></div>
+                <div class="skeleton h-10 w-full"></div>
+                <div class="skeleton h-10 w-full"></div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══ TAB GRUPOS ════════════════════════════ -->
+    <div id="tab-grupos" class="tab-content hidden">
+      <div class="flex flex-wrap items-end justify-between gap-3 mb-6">
+        <div>
+          <h2 class="text-2xl font-bold text-white">Grupos</h2>
+          <p class="text-gray-400 text-sm mt-0.5">Compará tu rendimiento con tus compañeros</p>
+        </div>
+        <button onclick="showGruposSubTab('crear')" id="btn-crear-grupo"
+          class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-all">
+          <i class="fas fa-plus"></i>Crear grupo
+        </button>
+      </div>
+
+      <!-- SubTab crear/unirse (colapsable) -->
+      <div id="grupo-acciones" class="hidden mb-6 fade-up">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 flex-shrink-0">
+                <i class="fas fa-plus text-emerald-400 text-sm"></i>
+              </div>
+              <div>
+                <div class="font-semibold text-white text-sm">Crear Grupo</div>
+                <div class="text-xs text-gray-500">Te damos un código para compartir</div>
+              </div>
+            </div>
+            <input id="grupo-nombre" type="text" placeholder="Nombre del grupo (ej: Los pibes)" class="admin-input mb-3">
+            <button onclick="crearGrupo()"
+              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
+              Crear Grupo
+            </button>
+            <div id="grupo-create-msg" class="mt-3 text-sm"></div>
+          </div>
+          <div class="rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/10 flex-shrink-0">
+                <i class="fas fa-key text-blue-400 text-sm"></i>
+              </div>
+              <div>
+                <div class="font-semibold text-white text-sm">Unirse con Código</div>
+                <div class="text-xs text-gray-500">Ingresá el código que te pasaron</div>
+              </div>
+            </div>
+            <input id="grupo-codigo" type="text" placeholder="Código (ej: AB12CD34)" style="text-transform:uppercase"
+              class="admin-input mb-3 font-mono tracking-widest">
+            <button onclick="unirseGrupo()"
+              class="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
+              Unirse
+            </button>
+            <div id="grupo-join-msg" class="mt-3 text-sm"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mis grupos -->
+      <div class="mb-6" id="mis-grupos-section">
+        <div class="flex items-center gap-2 mb-3">
+          <div class="fecha-bar"></div>
+          <h3 class="font-bold text-white text-sm uppercase tracking-wide">Mis Grupos</h3>
+        </div>
+        <div id="mis-grupos-list"></div>
+      </div>
+
+      <!-- Todos los grupos -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-3px h-22px" style="width:3px;height:22px;background:#4b5563;border-radius:99px;flex-shrink:0"></div>
+            <h3 class="font-bold text-white text-sm uppercase tracking-wide" style="color:#9ca3af">Todos los Grupos</h3>
+          </div>
+          <button onclick="loadGrupos()" class="text-xs text-gray-500 hover:text-blue-400 font-medium">
+            <i class="fas fa-sync-alt mr-1"></i>Actualizar
+          </button>
+        </div>
+        <div id="todos-grupos-list"></div>
+      </div>
+
+      <!-- Ranking del grupo seleccionado -->
+      <div id="grupo-ranking-section" class="hidden mt-6 fade-up">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2">
+            <div class="fecha-bar"></div>
+            <h3 class="font-bold text-white">Ranking: <span id="grupo-nombre-display" class="text-blue-400"></span></h3>
+          </div>
+          <button onclick="document.getElementById('grupo-ranking-section').classList.add('hidden')"
+            class="text-xs text-gray-600 hover:text-gray-400 font-medium">
+            <i class="fas fa-times mr-1"></i>Cerrar
+          </button>
+        </div>
+        <div class="rounded-2xl overflow-hidden border border-gray-700/60" style="background:var(--surface)">
+          <table class="w-full">
+            <thead>
+              <tr style="background:#0b1837;border-bottom:1px solid rgba(59,130,246,.2)">
+                <th class="py-3.5 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400 w-16">#</th>
+                <th class="py-3.5 px-5 text-left text-xs font-semibold uppercase tracking-wider text-gray-400">Jugador</th>
+                <th class="py-3.5 px-5 text-center text-xs font-semibold uppercase tracking-wider text-yellow-400 w-28">Puntos</th>
+                <th class="py-3.5 px-5 text-center text-xs font-semibold uppercase tracking-wider text-emerald-400 w-28 hidden sm:table-cell">Exactos</th>
+              </tr>
+            </thead>
+            <tbody id="grupo-ranking-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Modal código de acceso -->
+      <div id="modal-codigo-grupo" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden p-4"
+        onclick="if(event.target.id==='modal-codigo-grupo') cerrarModalCodigo()">
+        <div class="w-full max-w-xs rounded-3xl shadow-2xl p-6 border border-gray-700" style="background:#111827">
+          <div class="text-center mb-5">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background:rgba(59,130,246,.1)">
+              <i class="fas fa-lock text-blue-400 text-xl"></i>
+            </div>
+            <h3 class="font-bold text-white text-lg">Acceso con Código</h3>
+            <p id="modal-codigo-grupo-nombre" class="text-xs mt-1" style="color:#6b7280"></p>
+          </div>
+          <input id="modal-codigo-input" type="text" placeholder="Ingresá el código" style="text-transform:uppercase"
+            class="admin-input mb-3 font-mono tracking-widest text-center text-lg">
+          <div id="modal-codigo-error" class="hidden text-red-400 text-xs px-3 py-2.5 rounded-xl mb-3 text-center" style="background:rgba(239,68,68,.12)"></div>
+          <button onclick="submitCodigoGrupo()"
+            class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 rounded-2xl text-sm transition-all">
+            Ver Ranking
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ TAB ADMIN ════════════════════════════ -->
+    <div id="tab-admin" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-white">Panel de Administración</h2>
+        <p class="text-gray-400 text-sm mt-0.5">Gestioná equipos, jornadas y partidos</p>
+      </div>
+
+      <div class="inline-flex gap-1 p-1.5 mb-6 rounded-2xl" style="background:var(--surface)">
+        <button onclick="showAdminSub('equipos')" id="admin-sub-equipos-btn"
+          class="admin-sub-btn sub-active px-5 py-2 rounded-xl text-sm transition-all text-gray-400 font-medium">
+          <i class="fas fa-shield-alt mr-1.5"></i>Equipos
+        </button>
+        <button onclick="showAdminSub('fechas')" id="admin-sub-fechas-btn"
+          class="admin-sub-btn px-5 py-2 rounded-xl text-sm transition-all text-gray-400 font-medium">
+          <i class="fas fa-calendar mr-1.5"></i>Jornadas
+        </button>
+        <button onclick="showAdminSub('partidos-admin')" id="admin-sub-partidos-admin-btn"
+          class="admin-sub-btn px-5 py-2 rounded-xl text-sm transition-all text-gray-400 font-medium">
+          <i class="fas fa-futbol mr-1.5"></i>Partidos
+        </button>
+      </div>
+
+      <!-- Equipos -->
+      <div id="admin-sub-equipos" class="admin-sub fade-up">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <h3 class="font-semibold text-white text-sm mb-4">
+              <i class="fas fa-plus-circle mr-2 text-blue-400"></i>Nuevo Equipo
+            </h3>
+            <div class="space-y-3">
+              <input id="equipo-nombre" type="text" placeholder="Nombre (ej: Argentina)" class="admin-input">
+              <input id="equipo-abreviatura" type="text" placeholder="Abreviatura (ej: ARG) — opcional" maxlength="5"
+                style="text-transform:uppercase" class="admin-input font-mono tracking-widest">
+              <!-- Imagen del club -->
+              <div>
+                <label class="block text-xs font-medium mb-2" style="color:#6b7280">Link del escudo <span style="color:#4b5563">(opcional)</span></label>
+                <div class="flex items-center gap-2">
+                  <div id="equipo-imagen-preview" class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden" style="background:#1f2937;border:1px solid #2d3748">
+                    <i class="fas fa-image" style="color:#4b5563"></i>
+                  </div>
+                  <input id="equipo-imagen" type="url" placeholder="https://..." class="admin-input" oninput="previewEquipoImagen(this.value)">
+                </div>
+              </div>
+              <button onclick="crearEquipo()"
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
+                Crear Equipo
+              </button>
+            </div>
+          </div>
+          <div class="lg:col-span-2 rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <h3 class="font-semibold text-white text-sm mb-4">
+              <i class="fas fa-list mr-2 text-gray-500"></i>Equipos Registrados
+            </h3>
+            <div id="equipos-admin-list" class="space-y-2 max-h-72 overflow-y-auto thin-scroll"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fechas -->
+      <div id="admin-sub-fechas" class="admin-sub hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <h3 class="font-semibold text-white text-sm mb-4">
+              <i class="fas fa-plus-circle mr-2 text-blue-400"></i>Nueva Jornada
+            </h3>
+            <div class="space-y-3">
+              <input id="fecha-nombre" type="text" placeholder="ej: Fecha 1 · Grupos" class="admin-input">
+              <button onclick="crearFecha()"
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
+                Crear Jornada
+              </button>
+            </div>
+          </div>
+          <div class="lg:col-span-2 rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <h3 class="font-semibold text-white text-sm mb-4">
+              <i class="fas fa-list mr-2 text-gray-500"></i>Jornadas Registradas
+            </h3>
+            <div id="fechas-admin-list" class="space-y-2 max-h-72 overflow-y-auto thin-scroll"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Partidos admin -->
+      <div id="admin-sub-partidos-admin" class="admin-sub hidden">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <h3 class="font-semibold text-white text-sm mb-4">
+              <i class="fas fa-plus-circle mr-2 text-blue-400"></i>Nuevo Partido
+            </h3>
+            <div class="space-y-3">
+              <select id="partido-admin-fecha"     class="admin-input admin-select"><option value="">Seleccionar jornada...</option></select>
+              <select id="partido-admin-local"     class="admin-input admin-select"><option value="">Equipo local...</option></select>
+              <select id="partido-admin-visitante" class="admin-input admin-select"><option value="">Equipo visitante...</option></select>
+              <input  id="partido-admin-hora" type="datetime-local" class="admin-input">
+              <button onclick="crearPartidoAdmin()"
+                class="w-full bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold py-2.5 rounded-xl transition-all">
+                Crear Partido
+              </button>
+            </div>
+          </div>
+          <div class="lg:col-span-2 rounded-2xl border border-gray-700/60 p-5" style="background:var(--surface)">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-semibold text-white text-sm">
+                <i class="fas fa-futbol mr-2 text-gray-500"></i>Gestión de Partidos
+              </h3>
+              <button onclick="loadPartidosAdmin()" class="text-xs text-blue-400 hover:text-blue-300 font-medium">
+                <i class="fas fa-sync-alt mr-1"></i>Actualizar
+              </button>
+            </div>
+            <div id="partidos-admin-list" class="space-y-2 max-h-96 overflow-y-auto thin-scroll"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ════ MODAL: PRONÓSTICO ══════════════════════════ -->
+<div id="modal-pronostico"
+  class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 hidden p-0 sm:p-4"
+  onclick="closeIfOutside(event,'modal-pronostico',closePronosticoModal)">
+  <div class="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-700"
+    style="background:#111827" onclick="event.stopPropagation()">
+    <div class="sm:hidden flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 rounded-full" style="background:#374151"></div>
+    </div>
+    <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #1f2937">
+      <div>
+        <h3 class="font-bold text-white">Hacer Pronóstico</h3>
+        <p id="modal-partido-label" class="text-xs mt-0.5" style="color:#6b7280"></p>
+      </div>
+      <button onclick="closePronosticoModal()" class="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style="color:#6b7280" onmouseover="this.style.background='#1f2937';this.style.color='#f9fafb'" onmouseout="this.style.background='transparent';this.style.color='#6b7280'">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <span id="modal-local" class="font-semibold text-white text-sm text-center leading-tight"></span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="color:#9ca3af;background:#1f2937">Local</span>
+          <input id="modal-goles-local" type="number" min="0" max="20" value="0" class="score-input">
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="font-bold text-2xl" style="color:#4b5563">vs</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <span id="modal-visitante" class="font-semibold text-white text-sm text-center leading-tight"></span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="color:#9ca3af;background:#1f2937">Visitante</span>
+          <input id="modal-goles-visitante" type="number" min="0" max="20" value="0" class="score-input">
+        </div>
+      </div>
+      <div id="modal-pronostico-error" class="hidden text-center text-red-400 text-xs px-3 py-2.5 rounded-xl mb-4" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25)">
+        <i class="fas fa-exclamation-circle mr-1"></i><span id="modal-pron-err-msg"></span>
+      </div>
+      <button onclick="submitPronostico()"
+        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
+        <i class="fas fa-check mr-2"></i>Confirmar Pronóstico
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: RESULTADO ══════════════════════════ -->
+<div id="modal-resultado"
+  class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 hidden p-0 sm:p-4"
+  onclick="closeIfOutside(event,'modal-resultado',closeResultadoModal)">
+  <div class="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-700"
+    style="background:#111827" onclick="event.stopPropagation()">
+    <div class="sm:hidden flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 rounded-full" style="background:#374151"></div>
+    </div>
+    <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #1f2937">
+      <div>
+        <h3 class="font-bold text-white">Cargar Resultado</h3>
+        <p id="modal-resultado-label" class="text-xs mt-0.5" style="color:#6b7280"></p>
+      </div>
+      <button onclick="closeResultadoModal()" class="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style="color:#6b7280" onmouseover="this.style.background='#1f2937';this.style.color='#f9fafb'" onmouseout="this.style.background='transparent';this.style.color='#6b7280'">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-6">
+      <div class="flex items-center gap-4 mb-6">
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <span id="modal-res-local" class="font-semibold text-white text-sm text-center leading-tight"></span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="color:#9ca3af;background:#1f2937">Local</span>
+          <input id="modal-res-goles-local" type="number" min="0" max="20" value="0" class="score-input" style="border-color:#f97316">
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="font-bold text-2xl" style="color:#4b5563">–</span>
+        </div>
+        <div class="flex-1 flex flex-col items-center gap-2">
+          <span id="modal-res-visitante" class="font-semibold text-white text-sm text-center leading-tight"></span>
+          <span class="text-xs px-2 py-0.5 rounded-full font-medium" style="color:#9ca3af;background:#1f2937">Visitante</span>
+          <input id="modal-res-goles-visitante" type="number" min="0" max="20" value="0" class="score-input" style="border-color:#f97316">
+        </div>
+      </div>
+      <div id="modal-resultado-error" class="hidden text-center text-red-400 text-xs px-3 py-2.5 rounded-xl mb-4" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25)">
+        <i class="fas fa-exclamation-circle mr-1"></i><span id="modal-res-err-msg"></span>
+      </div>
+      <button onclick="submitResultado()"
+        class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg">
+        <i class="fas fa-flag-checkered mr-2"></i>Finalizar Partido
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: APLAZAR ═══════════════════════════ -->
+<div id="modal-aplazar"
+  class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 hidden p-0 sm:p-4"
+  onclick="closeIfOutside(event,'modal-aplazar',closeAplazarModal)">
+  <div class="w-full sm:max-w-sm rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-gray-700"
+    style="background:#111827" onclick="event.stopPropagation()">
+    <div class="sm:hidden flex justify-center pt-3 pb-1">
+      <div class="w-10 h-1 rounded-full" style="background:#374151"></div>
+    </div>
+    <div class="flex items-center justify-between px-6 py-4" style="border-bottom:1px solid #1f2937">
+      <div>
+        <h3 class="font-bold text-white"><i class="fas fa-calendar-times mr-2 text-amber-400"></i>Aplazar Partido</h3>
+        <p id="modal-aplazar-label" class="text-xs mt-0.5" style="color:#6b7280"></p>
+      </div>
+      <button onclick="closeAplazarModal()" class="w-9 h-9 rounded-xl flex items-center justify-center transition-all" style="color:#6b7280" onmouseover="this.style.background='#1f2937';this.style.color='#f9fafb'" onmouseout="this.style.background='transparent';this.style.color='#6b7280'">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="p-6">
+      <label class="block text-xs font-semibold uppercase tracking-wide mb-2" style="color:#9ca3af">Nueva fecha y hora</label>
+      <input id="modal-aplazar-fecha" type="datetime-local" class="admin-input mb-5">
+      <div id="modal-aplazar-error" class="hidden text-red-400 text-xs px-3 py-2.5 rounded-xl mb-4" style="background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25)">
+        <i class="fas fa-exclamation-circle mr-1"></i><span id="modal-aplazar-err-msg"></span>
+      </div>
+      <button onclick="submitAplazar()"
+        class="w-full font-bold py-3.5 rounded-2xl text-sm transition-all shadow-lg text-white"
+        style="background:#b45309" onmouseover="this.style.background='#92400e'" onmouseout="this.style.background='#b45309'">
+        <i class="fas fa-calendar-times mr-2"></i>Confirmar Aplazamiento
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-2xl shadow-2xl text-sm font-semibold text-white hidden z-50 flex items-center gap-2 whitespace-nowrap">
+  <i id="toast-icon" class="fas fa-check-circle"></i><span id="toast-msg"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG & STATE
+// ═══════════════════════════════════════════════════
+const API = '/api';
+let token = localStorage.getItem('jwt');
+let currentUser = null;
+try { currentUser = JSON.parse(localStorage.getItem('user')); } catch(e) {}
+let currentPartidoId = null;
+let allPartidos = [], allFechas = [], allEquipos = [];
+
+// ═══════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════
+function parseDate(dt) {
+  if (!dt) return new Date();
+  if (typeof dt === 'string') return new Date(dt);
+  if (Array.isArray(dt)) return new Date(dt[0], dt[1]-1, dt[2], dt[3]||0, dt[4]||0, dt[5]||0);
+  return new Date(dt);
+}
+
+const FLAGS = {
+  'Argentina':'🇦🇷','Brasil':'🇧🇷','Brazil':'🇧🇷','Francia':'🇫🇷','France':'🇫🇷',
+  'Alemania':'🇩🇪','Germany':'🇩🇪','España':'🇪🇸','Spain':'🇪🇸','Portugal':'🇵🇹',
+  'Italia':'🇮🇹','Italy':'🇮🇹','Uruguay':'🇺🇾','Colombia':'🇨🇴','México':'🇲🇽',
+  'Mexico':'🇲🇽','USA':'🇺🇸','Estados Unidos':'🇺🇸','Canadá':'🇨🇦','Canada':'🇨🇦',
+  'Marruecos':'🇲🇦','Morocco':'🇲🇦','Japón':'🇯🇵','Japan':'🇯🇵','Corea':'🇰🇷',
+  'Países Bajos':'🇳🇱','Netherlands':'🇳🇱','Holanda':'🇳🇱','Croacia':'🇭🇷',
+  'Croatia':'🇭🇷','Senegal':'🇸🇳','Ecuador':'🇪🇨','Perú':'🇵🇪','Peru':'🇵🇪',
+  'Chile':'🇨🇱','Australia':'🇦🇺','Serbia':'🇷🇸','Suiza':'🇨🇭','Switzerland':'🇨🇭',
+  'Ghana':'🇬🇭','Nigeria':'🇳🇬','Polonia':'🇵🇱','Dinamarca':'🇩🇰','Bélgica':'🇧🇪',
+  'Belgium':'🇧🇪','Inglaterra':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Egipto':'🇪🇬',
+  'Arabia Saudita':'🇸🇦','Camerún':'🇨🇲','Venezuela':'🇻🇪','Paraguay':'🇵🇾',
+  'Bolivia':'🇧🇴','Costa Rica':'🇨🇷','Panamá':'🇵🇦','Jamaica':'🇯🇲'
+};
+function getFlag(n) { return FLAGS[n] || '⚽'; }
+
+// ═══════════════════════════════════════════════════
+// API
+// ═══════════════════════════════════════════════════
+async function api(method, path, body) {
+  const res = await fetch(API + path, {
+    method,
+    headers: { 'Content-Type':'application/json', ...(token ? {'Authorization':'Bearer '+token} : {}) },
+    body: body !== undefined ? JSON.stringify(body) : undefined
+  });
+  if (res.status === 401) { logout(); return null; }
+  if (res.status === 204) return null;
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || data.message || 'Error en la solicitud');
+  return data;
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+let _toastTimer;
+function toast(msg, type='ok') {
+  clearTimeout(_toastTimer);
+  const el = document.getElementById('toast');
+  document.getElementById('toast-icon').className =
+    type==='error' ? 'fas fa-times-circle' : type==='warn' ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
+  document.getElementById('toast-msg').textContent = msg;
+  el.style.background = type==='error' ? '#dc2626' : type==='warn' ? '#d97706' : '#1e293b';
+  el.classList.remove('hidden');
+  _toastTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+}
+
+function closeIfOutside(e, modalId, closeFn) {
+  if (e.target.id === modalId) closeFn();
+}
+
+// ═══════════════════════════════════════════════════
+// AUTH
+// ═══════════════════════════════════════════════════
+function showAuthTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+  document.getElementById('form-register').classList.toggle('hidden', isLogin);
+  const active   = 'flex-1 py-4 text-sm font-semibold text-blue-700 border-b-2 border-blue-600 transition-all';
+  const inactive = 'flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent transition-all hover:text-slate-600';
+  document.getElementById('tab-login-btn').className    = isLogin  ? active : inactive;
+  document.getElementById('tab-register-btn').className = !isLogin ? active : inactive;
+}
+
+async function login() {
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch spin mr-2"></i>Ingresando...';
+  document.getElementById('login-error').classList.add('hidden');
+  try {
+    const data = await api('POST', '/auth/login', {
+      email:     document.getElementById('login-email').value.trim(),
+      contrasena:document.getElementById('login-password').value
+    });
+    if (!data) return;
+    token = data.token;
+    currentUser = { id:data.id, nombre:data.nombre, apellido:data.apellido, rol:data.rol };
+    localStorage.setItem('jwt', token);
+    localStorage.setItem('user', JSON.stringify(currentUser));
+    showApp();
+  } catch(e) {
+    document.getElementById('login-error-msg').textContent = e.message;
+    document.getElementById('login-error').classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Ingresar';
+  }
+}
+
+async function register() {
+  const btn = document.getElementById('register-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-circle-notch spin mr-2"></i>Creando cuenta...';
+  const errEl = document.getElementById('register-error');
+  const okEl  = document.getElementById('register-ok');
+  errEl.classList.add('hidden'); okEl.classList.add('hidden');
+  try {
+    await api('POST', '/auth/register', {
+      nombre:    document.getElementById('reg-nombre').value.trim(),
+      apellido:  document.getElementById('reg-apellido').value.trim(),
+      email:     document.getElementById('reg-email').value.trim(),
+      contrasena:document.getElementById('reg-password').value
+    });
+    okEl.classList.remove('hidden');
+    setTimeout(() => showAuthTab('login'), 1800);
+  } catch(e) {
+    document.getElementById('register-error-msg').textContent = e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Crear Cuenta';
+  }
+}
+
+function logout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('jwt'); localStorage.removeItem('user');
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('flex');
+  document.getElementById('auth-screen').classList.remove('hidden');
+}
+
+function showApp() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  document.getElementById('main-app').classList.add('flex');
+  document.getElementById('nav-username').textContent = `${currentUser.nombre} ${currentUser.apellido}`;
+  const isAdmin = currentUser.rol === 'ADMINISTRADOR';
+  document.getElementById('nav-role').textContent = isAdmin ? '⭐ Administrador' : '🎮 Jugador';
+  if (isAdmin) document.getElementById('admin-nav-btn').classList.remove('hidden');
+  showTab('partidos');
+}
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  const tabEl = document.getElementById('tab-' + tab);
+  if (!tabEl) return;
+  tabEl.classList.remove('hidden');
+  tabEl.classList.add('fade-up');
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('nav-active', btn.dataset.tab === tab);
+  });
+  if      (tab === 'partidos') loadPartidos();
+  else if (tab === 'ranking')  loadRanking();
+  else if (tab === 'grupos')   loadGrupos();
+  else if (tab === 'admin')    loadAdmin();
+}
+
+function showAdminSub(sub) {
+  document.querySelectorAll('.admin-sub').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.admin-sub-btn').forEach(btn => btn.classList.remove('sub-active'));
+  const el = document.getElementById('admin-sub-' + sub);
+  if (el) { el.classList.remove('hidden'); el.classList.add('fade-up'); }
+  const btn = document.getElementById('admin-sub-' + sub + '-btn');
+  if (btn) btn.classList.add('sub-active');
+}
+
+// ═══════════════════════════════════════════════════
+// PARTIDOS
+// ═══════════════════════════════════════════════════
+async function loadPartidos() {
+  const fechaId = document.getElementById('filter-fecha').value;
+  const url = fechaId ? `/partidos?fechaId=${fechaId}` : '/partidos';
+  const container = document.getElementById('partidos-container');
+
+  container.innerHTML = [0,1,2].map(() => `
+    <div class="partido-card p-5 mb-4">
+      <div class="skeleton h-4 w-24 mb-4"></div>
+      <div class="flex items-center justify-between">
+        <div class="skeleton h-6 w-28"></div>
+        <div class="skeleton h-8 w-20 rounded-xl mx-4"></div>
+        <div class="skeleton h-6 w-28"></div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('refresh-icon').classList.add('spin');
+  try {
+    const [partidos, fechas, misProns, equipos] = await Promise.all([
+      api('GET', url), api('GET', '/fechas'), api('GET', '/pronosticos/mios'), api('GET', '/equipos')
+    ]);
+    allPartidos = partidos || [];
+    allFechas   = fechas   || [];
+    allEquipos  = equipos  || [];
+
+    // Actualizar filtro
+    const sel  = document.getElementById('filter-fecha');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">Todas las jornadas</option>' +
+      allFechas.map(f => `<option value="${f.id}" ${String(f.id)===prev?'selected':''}>${f.nombre}</option>`).join('');
+
+    // Mapa pronósticos
+    const pronMap = {};
+    (misProns || []).forEach(p => { pronMap[p.partidoId] = p; });
+
+    // Hero banner
+    const upcoming = allPartidos.filter(p => p.estado === 'POR_JUGARSE').length;
+    const myPts = (misProns || []).reduce((acc, p) => {
+      if (p.resultadoPronostico === 'EXACTO')    return acc + 3;
+      if (p.resultadoPronostico === 'TENDENCIA') return acc + 1;
+      return acc;
+    }, 0);
+    const myProns = (misProns || []).filter(p => p.resultadoPronostico).length;
+    const heroEl = document.getElementById('partidos-hero');
+    if (heroEl) heroEl.innerHTML = `
+      <div class="hero-banner fade-up">
+        <div class="hero-stat">
+          <div style="font-size:.75rem;color:#60a5fa;margin-bottom:4px"><i class="fas fa-calendar-alt"></i></div>
+          <div class="hero-stat-val">${upcoming}</div>
+          <div class="hero-stat-lbl">Próximos</div>
+        </div>
+        <div class="hero-stat">
+          <div style="font-size:.75rem;color:#fbbf24;margin-bottom:4px"><i class="fas fa-star"></i></div>
+          <div class="hero-stat-val" style="color:#fbbf24">${myPts}</div>
+          <div class="hero-stat-lbl">Mis puntos</div>
+        </div>
+        <div class="hero-stat">
+          <div style="font-size:.75rem;color:#34d399;margin-bottom:4px"><i class="fas fa-check-circle"></i></div>
+          <div class="hero-stat-val" style="color:#34d399">${myProns}</div>
+          <div class="hero-stat-lbl">Resueltos</div>
+        </div>
+      </div>`;
+
+    if (!allPartidos.length) {
+      container.innerHTML = `
+        <div class="flex flex-col items-center justify-center py-24 text-gray-500">
+          <div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-4" style="background:var(--surface2)">
+            <i class="fas fa-calendar-times text-3xl text-gray-600"></i>
+          </div>
+          <p class="font-semibold text-gray-400">No hay partidos cargados</p>
+          <p class="text-sm mt-1 text-gray-600">${currentUser.rol==='ADMINISTRADOR'?'Creá equipos, jornadas y partidos desde Admin':'Volvé más tarde'}</p>
+        </div>`;
+      return;
+    }
+
+    // Agrupar por jornada
+    const byFecha = {};
+    allPartidos.forEach(p => {
+      if (!byFecha[p.fechaId]) byFecha[p.fechaId] = { nombre:p.fechaNombre, partidos:[] };
+      byFecha[p.fechaId].partidos.push(p);
+    });
+
+    container.innerHTML = Object.values(byFecha).map(g => `
+      <div class="mb-8">
+        <div class="fecha-header">
+          <div class="fecha-bar"></div>
+          <h3 class="font-bold text-white text-base">${g.nombre}</h3>
+          <div class="flex-1 h-px bg-gray-800"></div>
+          <span class="text-xs text-gray-600">${g.partidos.length} partido${g.partidos.length!==1?'s':''}</span>
+        </div>
+        <div class="grid grid-cols-1 gap-4">
+          ${g.partidos.map(p => renderPartido(p, pronMap[p.id])).join('')}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    container.innerHTML = `
+      <div class="text-center py-12">
+        <i class="fas fa-exclamation-triangle text-2xl text-red-500 mb-2 block"></i>
+        <p class="text-red-400 text-sm">${e.message}</p>
+      </div>`;
+  } finally {
+    document.getElementById('refresh-icon').classList.remove('spin');
+  }
+}
+
+function getEquipoImg(nombre) {
+  const eq = allEquipos.find(e => e.nombre === nombre);
+  if (eq?.imagenUrl) return `<img src="${eq.imagenUrl}" class="w-8 h-8 object-cover rounded-lg mx-auto mb-1">`;
+  return `<div class="text-2xl mb-1">${getFlag(nombre)}</div>`;
+}
+
+function renderPartido(p, miPron) {
+  const isAdmin = currentUser?.rol === 'ADMINISTRADOR';
+  const flagL = getFlag(p.equipoLocalNombre);
+  const flagV = getFlag(p.equipoVisitanteNombre);
+
+  const statusBadge = {
+    POR_JUGARSE: `<span class="sbadge sb-azul"><i class="fas fa-clock"></i>Por jugarse</span>`,
+    APLAZADO:    `<span class="sbadge sb-naranja"><i class="fas fa-calendar-times"></i>Aplazado</span>`,
+    EN_JUEGO:    `<span class="sbadge sb-verde pulse-dot"><i class="fas fa-circle"></i>En juego</span>`,
+    FINALIZADO:  `<span class="sbadge sb-gris"><i class="fas fa-check"></i>Finalizado</span>`
+  }[p.estado] || '';
+
+  const horaStr = parseDate(p.fechaHoraInicio).toLocaleString('es-AR', {
+    weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'
+  });
+
+  // Centro: score o vs
+  let center = '';
+  if (p.estado === 'FINALIZADO') {
+    const resText = p.resultado==='LOCAL' ? 'Ganó Local' : p.resultado==='VISITANTE' ? 'Ganó Visitante' : 'Empate';
+    center = `<div class="text-center px-4">
+      <div class="score-big">${p.golesLocal} – ${p.golesVisitante}</div>
+      <div class="text-xs text-gray-500 mt-1">${resText}</div>
+    </div>`;
+  } else if (p.estado === 'EN_JUEGO') {
+    center = `<div class="text-center px-4">
+      <div class="score-big text-gray-600">–</div>
+      <div class="text-xs text-emerald-400 font-semibold mt-1 pulse-dot">En curso</div>
+    </div>`;
+  } else {
+    center = `<div class="text-center px-4 min-w-[80px]">
+      <div style="font-family:'Barlow Condensed',system-ui;font-size:1.1rem;font-weight:700;color:#4b5563">vs</div>
+      <div class="text-xs text-gray-600 mt-1 whitespace-nowrap">${horaStr}</div>
+    </div>`;
+  }
+
+  // Footer
+  let footer = '';
+  if (!isAdmin) {
+    if (miPron) {
+      const resMap = {
+        EXACTO:     { cls:'pb-exacto',    icon:'fas fa-bullseye',     txt:'Exacto · +3 pts' },
+        TENDENCIA:  { cls:'pb-tendencia', icon:'fas fa-bolt',         txt:'Tendencia · +1 pt' },
+        SIN_ACIERTO:{ cls:'pb-fallo',     icon:'fas fa-times-circle', txt:'Sin acierto' }
+      };
+      const res = miPron.resultadoPronostico ? resMap[miPron.resultadoPronostico] : null;
+      const editBtn = !miPron.resultadoPronostico && p.estado === 'POR_JUGARSE'
+        ? `<button onclick="openPronosticoModal(${p.id})" class="text-blue-400 hover:text-blue-300 text-xs font-semibold underline underline-offset-2">Modificar</button>`
+        : '';
+      footer = `<div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-between">
+        <div class="text-xs text-gray-500">
+          Mi pronóstico: <strong class="text-white font-mono">${miPron.golesLocal}–${miPron.golesVisitante}</strong>
+        </div>
+        ${res ? `<span class="pron-badge ${res.cls}"><i class="${res.icon}"></i>${res.txt}</span>` : editBtn}
+      </div>`;
+    } else if (p.estado === 'POR_JUGARSE') {
+      footer = `<div class="mt-4 pt-3 border-t border-gray-800 flex justify-center">
+        <button onclick="openPronosticoModal(${p.id})"
+          class="flex items-center gap-2 bg-blue-700 hover:bg-blue-600 text-white text-xs font-semibold px-6 py-2.5 rounded-xl transition-all shadow-md shadow-blue-900/40 active:scale-95">
+          <i class="fas fa-pencil-alt"></i>Hacer Pronóstico
+        </button>
+      </div>`;
+    } else {
+      footer = `<div class="mt-4 pt-3 border-t border-gray-800 text-center text-xs text-gray-700 italic">
+        No hiciste pronóstico para este partido
+      </div>`;
+    }
+  } else if (p.estado === 'POR_JUGARSE' || p.estado === 'APLAZADO') {
+    footer = `<div class="mt-4 pt-3 border-t border-gray-800 flex items-center justify-end gap-2">
+      <button onclick="openAplazarModal(${p.id})"
+        class="flex items-center gap-2 bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all">
+        <i class="fas fa-calendar-times"></i>Aplazar
+      </button>
+      <button onclick="iniciarPartido(${p.id})"
+        class="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-all">
+        <i class="fas fa-play"></i>Iniciar
+      </button>
+    </div>`;
+  } else if (p.estado === 'EN_JUEGO') {
+    footer = `<div class="mt-4 pt-3 border-t border-gray-800 flex justify-end">
+      <button onclick="openResultadoModal(${p.id})"
+        class="flex items-center gap-2 bg-orange-700 hover:bg-orange-600 text-white text-xs font-semibold px-5 py-2 rounded-xl transition-all">
+        <i class="fas fa-flag-checkered"></i>Cargar resultado
+      </button>
+    </div>`;
+  }
+
+  return `<div class="partido-card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <span class="text-xs text-gray-600">${p.fechaNombre}</span>
+      ${statusBadge}
+    </div>
+    <div class="flex items-center">
+      <div class="flex-1 text-right pr-3">
+        ${getEquipoImg(p.equipoLocalNombre)}
+        <div class="font-bold text-white team-name">${p.equipoLocalNombre}</div>
+        <div class="text-xs text-gray-600 mt-0.5">Local</div>
+      </div>
+      ${center}
+      <div class="flex-1 text-left pl-3">
+        ${getEquipoImg(p.equipoVisitanteNombre)}
+        <div class="font-bold text-white team-name">${p.equipoVisitanteNombre}</div>
+        <div class="text-xs text-gray-600 mt-0.5">Visitante</div>
+      </div>
+    </div>
+    ${footer}
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// MODALES
+// ═══════════════════════════════════════════════════
+function openPronosticoModal(partidoId) {
+  const p = allPartidos.find(x => x.id === partidoId);
+  if (!p) return;
+  currentPartidoId = partidoId;
+  document.getElementById('modal-local').textContent     = p.equipoLocalNombre;
+  document.getElementById('modal-visitante').textContent = p.equipoVisitanteNombre;
+  document.getElementById('modal-partido-label').textContent =
+    `${p.fechaNombre} · ${parseDate(p.fechaHoraInicio).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}`;
+  document.getElementById('modal-goles-local').value     = 0;
+  document.getElementById('modal-goles-visitante').value = 0;
+  document.getElementById('modal-pronostico-error').classList.add('hidden');
+  document.getElementById('modal-pronostico').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-goles-local').focus(), 100);
+}
+function closePronosticoModal() { document.getElementById('modal-pronostico').classList.add('hidden'); }
+
+async function submitPronostico() {
+  const golesLocal     = parseInt(document.getElementById('modal-goles-local').value)     || 0;
+  const golesVisitante = parseInt(document.getElementById('modal-goles-visitante').value) || 0;
+  document.getElementById('modal-pronostico-error').classList.add('hidden');
+  try {
+    await api('POST', '/pronosticos', { partidoId: currentPartidoId, golesLocal, golesVisitante });
+    toast('¡Pronóstico guardado! ⚽');
+    closePronosticoModal();
+    loadPartidos();
+  } catch(e) {
+    document.getElementById('modal-pron-err-msg').textContent = e.message;
+    document.getElementById('modal-pronostico-error').classList.remove('hidden');
+  }
+}
+
+function openAplazarModal(partidoId) {
+  const p = allPartidos.find(x => x.id === partidoId);
+  if (!p) return;
+  currentPartidoId = partidoId;
+  document.getElementById('modal-aplazar-label').textContent =
+    `${p.equipoLocalNombre} vs ${p.equipoVisitanteNombre} · ${p.fechaNombre}`;
+  const fechaActual = parseDate(p.fechaHoraInicio);
+  const pad = n => String(n).padStart(2, '0');
+  const localIso = `${fechaActual.getFullYear()}-${pad(fechaActual.getMonth()+1)}-${pad(fechaActual.getDate())}T${pad(fechaActual.getHours())}:${pad(fechaActual.getMinutes())}`;
+  document.getElementById('modal-aplazar-fecha').value = localIso;
+  document.getElementById('modal-aplazar-error').classList.add('hidden');
+  document.getElementById('modal-aplazar').classList.remove('hidden');
+}
+function closeAplazarModal() { document.getElementById('modal-aplazar').classList.add('hidden'); }
+
+async function submitAplazar() {
+  const fechaStr = document.getElementById('modal-aplazar-fecha').value;
+  if (!fechaStr) {
+    document.getElementById('modal-aplazar-err-msg').textContent = 'Seleccioná la nueva fecha y hora';
+    document.getElementById('modal-aplazar-error').classList.remove('hidden');
+    return;
+  }
+  document.getElementById('modal-aplazar-error').classList.add('hidden');
+  try {
+    const nuevaFechaHoraInicio = new Date(fechaStr).toISOString().slice(0, 19);
+    await api('PATCH', `/partidos/${currentPartidoId}/aplazar`, { nuevaFechaHoraInicio });
+    toast('Partido aplazado. Nueva fecha guardada.');
+    closeAplazarModal();
+    loadPartidosAdmin();
+    if (!document.getElementById('tab-partidos').classList.contains('hidden')) loadPartidos();
+  } catch(e) {
+    document.getElementById('modal-aplazar-err-msg').textContent = e.message;
+    document.getElementById('modal-aplazar-error').classList.remove('hidden');
+  }
+}
+
+function openResultadoModal(partidoId) {
+  const p = allPartidos.find(x => x.id === partidoId);
+  if (!p) return;
+  currentPartidoId = partidoId;
+  document.getElementById('modal-res-local').textContent     = p.equipoLocalNombre;
+  document.getElementById('modal-res-visitante').textContent = p.equipoVisitanteNombre;
+  document.getElementById('modal-resultado-label').textContent =
+    `${p.fechaNombre} · ${p.equipoLocalNombre} vs ${p.equipoVisitanteNombre}`;
+  document.getElementById('modal-res-goles-local').value     = 0;
+  document.getElementById('modal-res-goles-visitante').value = 0;
+  document.getElementById('modal-resultado-error').classList.add('hidden');
+  document.getElementById('modal-resultado').classList.remove('hidden');
+}
+function closeResultadoModal() { document.getElementById('modal-resultado').classList.add('hidden'); }
+
+async function submitResultado() {
+  const golesLocal     = parseInt(document.getElementById('modal-res-goles-local').value)     || 0;
+  const golesVisitante = parseInt(document.getElementById('modal-res-goles-visitante').value) || 0;
+  document.getElementById('modal-resultado-error').classList.add('hidden');
+  try {
+    await api('PATCH', `/partidos/${currentPartidoId}/resultado`, { golesLocal, golesVisitante });
+    toast('Resultado cargado. Puntos calculados!');
+    closeResultadoModal();
+    loadPartidosAdmin();
+  } catch(e) {
+    document.getElementById('modal-res-err-msg').textContent = e.message;
+    document.getElementById('modal-resultado-error').classList.remove('hidden');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// RANKING
+// ═══════════════════════════════════════════════════
+let _rankingSubTab = 'general';
+
+async function loadRanking() {
+  if (_rankingSubTab === 'general') await loadRankingGeneral();
+  else await loadFechasParaRanking();
+}
+
+function showRankingSubTab(tab) {
+  _rankingSubTab = tab;
+  document.querySelectorAll('.rtab-btn').forEach(b => {
+    b.classList.remove('bg-blue-600', 'text-white');
+    b.classList.add('text-gray-400');
+  });
+  const active = document.getElementById(`rtab-${tab}`);
+  active.classList.add('bg-blue-600', 'text-white');
+  active.classList.remove('text-gray-400');
+
+  const sel  = document.getElementById('ranking-jornada-selector');
+  const sub  = document.getElementById('ranking-subtitle');
+  if (tab === 'general') {
+    sel.classList.add('hidden');
+    sub.textContent = 'Clasificación global de todos los jugadores';
+    loadRankingGeneral();
+  } else {
+    sel.classList.remove('hidden');
+    sub.textContent = 'Puntos obtenidos en una jornada específica';
+    loadFechasParaRanking();
+  }
+}
+
+async function loadRankingGeneral() {
+  const tbody = document.getElementById('ranking-body');
+  try {
+    const ranking = await api('GET', '/ranking');
+    renderRankingTable(tbody, ranking);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-400">${e.message}</td></tr>`;
+  }
+}
+
+async function loadFechasParaRanking() {
+  const sel   = document.getElementById('ranking-fecha-select');
+  const tbody = document.getElementById('ranking-body');
+  try {
+    const fechas  = await api('GET', '/fechas');
+    const validas = (fechas||[]).filter(f => f.estado === 'FINALIZADA' || f.estado === 'EN_JUEGO');
+    sel.innerHTML = '<option value="">— Seleccioná una jornada —</option>' +
+      validas.map(f => `<option value="${f.id}">${f.nombre} (${estadoFechaLabel(f.estado)})</option>`).join('');
+    if (validas.length > 0) {
+      sel.value = validas[0].id;
+      await loadRankingFecha(validas[0].id);
+    } else {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-16">
+        <i class="fas fa-calendar-times text-4xl text-gray-700 mb-3 block"></i>
+        <p class="text-gray-500 mt-2">No hay jornadas finalizadas todavía</p>
+      </td></tr>`;
+    }
+  } catch(e) { console.error(e); }
+}
+
+function estadoFechaLabel(estado) {
+  return {PROGRAMADA:'Programada',EN_JUEGO:'En Juego',FINALIZADA:'Finalizada',APLAZADA:'Aplazada'}[estado] || estado;
+}
+
+async function onFechaRankingChange() {
+  const id = document.getElementById('ranking-fecha-select').value;
+  if (id) await loadRankingFecha(id);
+}
+
+async function loadRankingFecha(fechaId) {
+  const tbody = document.getElementById('ranking-body');
+  tbody.innerHTML = `<tr><td colspan="4" class="py-12 text-center">
+    <div class="space-y-2 px-8">
+      <div class="skeleton h-10 w-full"></div>
+      <div class="skeleton h-10 w-full"></div>
+      <div class="skeleton h-10 w-full"></div>
+    </div></td></tr>`;
+  try {
+    const ranking = await api('GET', `/ranking/fecha/${fechaId}`);
+    renderRankingTable(tbody, ranking);
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-400">${e.message}</td></tr>`;
+  }
+}
+
+function renderRankingTable(tbody, ranking) {
+  if (!(ranking||[]).length) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-16">
+      <i class="fas fa-trophy text-4xl text-gray-700 mb-3 block"></i>
+      <p class="text-gray-500">Sin pronósticos registrados</p>
+    </td></tr>`;
+    return;
+  }
+  const maxPts = ranking[0]?.puntos || 1;
+  const medals = ['🥇','🥈','🥉'];
+  tbody.innerHTML = ranking.map((r, i) => {
+    const isMe  = currentUser && r.nombre===currentUser.nombre && r.apellido===currentUser.apellido;
+    const pct   = Math.round((r.puntos / maxPts) * 100);
+    const rowBg = i===0?'rgba(245,158,11,.06)':i===1?'rgba(148,163,184,.03)':i===2?'rgba(205,127,50,.05)':'';
+    return `<tr class="rank-row ${isMe?'ring-1 ring-inset ring-blue-500/30':''}" style="background:${rowBg}">
+      <td class="py-4 px-5 text-base">${i<3?medals[i]:`<span class="font-mono font-bold text-gray-500 text-sm">${r.posicion}</span>`}</td>
+      <td class="py-4 px-5">
+        <div class="font-semibold text-white text-sm">${r.nombre} ${r.apellido}</div>
+        ${isMe?'<div class="text-xs text-blue-400 font-medium">← vos</div>':''}
+      </td>
+      <td class="py-4 px-5 text-center">
+        <span style="font-family:'Barlow Condensed',system-ui;font-size:1.5rem;font-weight:900;color:#fbbf24">${r.puntos}</span>
+        <span class="text-xs text-gray-600 ml-0.5">pts</span>
+        <div class="rank-bar-wrap w-20 mx-auto"><div class="rank-bar-fill" style="--bar-w:${pct}%"></div></div>
+      </td>
+      <td class="py-4 px-5 text-center hidden sm:table-cell">
+        <span class="font-semibold text-emerald-400">${r.cantidadExactos}</span>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// GRUPOS
+// ═══════════════════════════════════════════════════
+let _grupoSeleccionadoId = null;
+let _misGruposIds = new Set();
+
+function showGruposSubTab(tab) {
+  const el = document.getElementById('grupo-acciones');
+  if (tab === 'crear') el.classList.toggle('hidden');
+}
+
+async function loadGrupos() {
+  const [todos, mios] = await Promise.all([
+    api('GET', '/grupos'), api('GET', '/grupos/mis-grupos')
+  ]);
+  _misGruposIds = new Set((mios||[]).map(g => g.id));
+
+  // Mis grupos
+  const misEl = document.getElementById('mis-grupos-list');
+  if (!(mios||[]).length) {
+    misEl.innerHTML = `<div class="text-xs py-4 text-center" style="color:#4b5563">Todavía no pertenecés a ningún grupo. Creá uno o ingresá un código.</div>`;
+  } else {
+    misEl.innerHTML = (mios||[]).map(g => `
+      <div class="flex items-center justify-between px-4 py-3.5 rounded-xl border border-blue-500/20 mb-2 group transition-all hover:border-blue-500/40" style="background:rgba(59,130,246,.06)">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/15 flex-shrink-0">
+            <i class="fas fa-users text-blue-400 text-sm"></i>
+          </div>
+          <div>
+            <div class="font-semibold text-white text-sm">${g.nombre}</div>
+            <div class="text-xs" style="color:#6b7280">
+              <i class="fas fa-user mr-1"></i>${g.creadorNombre} ${g.creadorApellido}
+              <span class="mx-1.5">·</span>
+              <i class="fas fa-users mr-1"></i>${g.cantidadIntegrantes} miembro${g.cantidadIntegrantes!==1?'s':''}
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <div class="font-mono text-xs text-blue-300 bg-blue-900/30 px-2.5 py-1 rounded-lg tracking-widest border border-blue-500/20">${g.codigoDeAcceso}</div>
+          <button onclick="loadGrupoRanking(${g.id},'${g.nombre.replace(/'/g, "\\'")}')"
+            class="flex items-center gap-1.5 text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-xl font-semibold transition-all">
+            <i class="fas fa-trophy"></i>Ver ranking
+          </button>
+          <button onclick="abandonarGrupo(${g.id})" title="Abandonar grupo"
+            class="flex items-center gap-1 text-xs text-orange-400 hover:text-orange-300 border border-orange-900/40 hover:border-orange-700/60 px-2.5 py-1.5 rounded-xl font-semibold transition-all">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+
+  // Todos los grupos
+  const todosEl = document.getElementById('todos-grupos-list');
+  if (!(todos||[]).length) {
+    todosEl.innerHTML = `<div class="text-xs py-4 text-center" style="color:#4b5563">No hay grupos creados todavía.</div>`;
+  } else {
+    todosEl.innerHTML = (todos||[]).map(g => {
+      const esMio = _misGruposIds.has(g.id);
+      return `
+        <div class="flex items-center justify-between px-4 py-3.5 rounded-xl border border-gray-700/60 mb-2 transition-all hover:border-gray-600/60" style="background:var(--surface)">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style="background:var(--surface2)">
+              <i class="fas fa-users text-gray-500 text-sm"></i>
+            </div>
+            <div>
+              <div class="font-semibold text-white text-sm">${g.nombre}</div>
+              <div class="text-xs" style="color:#6b7280">
+                <i class="fas fa-user mr-1"></i>${g.creadorNombre} ${g.creadorApellido}
+                <span class="mx-1.5">·</span>
+                <i class="fas fa-users mr-1"></i>${g.cantidadIntegrantes} miembro${g.cantidadIntegrantes!==1?'s':''}
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            ${esMio
+              ? `<button onclick="loadGrupoRanking(${g.id},'${g.nombre.replace(/'/g, "\\'")}')"
+                  class="flex items-center gap-1.5 text-xs bg-blue-700 hover:bg-blue-600 text-white px-3 py-1.5 rounded-xl font-semibold transition-all">
+                  <i class="fas fa-trophy"></i>Ver ranking
+                </button>`
+              : `<button onclick="abrirModalCodigo(${g.id},'${g.nombre.replace(/'/g, "\\'")}')"
+                  class="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-xl font-semibold transition-all">
+                  <i class="fas fa-lock"></i>Acceder
+                </button>`
+            }
+            ${currentUser?.rol === 'ADMINISTRADOR'
+              ? `<button onclick="eliminarGrupo(${g.id})" title="Eliminar grupo"
+                  class="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-900/40 hover:border-red-700/60 px-2.5 py-1.5 rounded-xl font-semibold transition-all">
+                  <i class="fas fa-trash-alt"></i>
+                </button>`
+              : ''
+            }
+          </div>
+        </div>`;
+    }).join('');
+  }
+}
+
+async function abandonarGrupo(id) {
+  if (!confirm('¿Abandonar este grupo?')) return;
+  try {
+    await api('DELETE', `/grupos/${id}/abandonar`);
+    toast('Abandonaste el grupo');
+    loadGrupos();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function eliminarGrupo(id) {
+  if (!confirm('¿Eliminar este grupo? Esta acción no se puede deshacer.')) return;
+  try {
+    await api('DELETE', `/grupos/${id}`);
+    toast('Grupo eliminado');
+    loadGrupos();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function crearGrupo() {
+  const nombre = document.getElementById('grupo-nombre').value.trim();
+  const msg = document.getElementById('grupo-create-msg');
+  if (!nombre) { msg.innerHTML = '<span class="text-red-400 text-xs">Ingresá un nombre</span>'; return; }
+  try {
+    const g = await api('POST', '/grupos', { nombre });
+    msg.innerHTML = `<div class="rounded-xl p-3 text-xs mt-1" style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25)">
+      <div class="font-semibold text-emerald-400 mb-1">¡Grupo creado!</div>
+      <div style="color:#9ca3af">Código: <span class="font-mono font-bold text-lg text-white tracking-widest">${g.codigoDeAcceso}</span></div>
+    </div>`;
+    toast('Grupo creado. Código: ' + g.codigoDeAcceso);
+    document.getElementById('grupo-nombre').value = '';
+    loadGrupos();
+  } catch(e) { msg.innerHTML = `<span class="text-red-400 text-xs">${e.message}</span>`; }
+}
+
+async function unirseGrupo() {
+  const codigo = document.getElementById('grupo-codigo').value.trim().toUpperCase();
+  const msg = document.getElementById('grupo-join-msg');
+  if (!codigo) { msg.innerHTML = '<span class="text-red-400 text-xs">Ingresá el código</span>'; return; }
+  try {
+    const g = await api('POST', '/grupos/unirse', { codigoDeAcceso: codigo });
+    msg.innerHTML = `<span class="text-emerald-400 text-xs font-medium">Te uniste a "${g.nombre}"</span>`;
+    document.getElementById('grupo-codigo').value = '';
+    loadGrupos();
+    setTimeout(() => loadGrupoRanking(g.id, g.nombre), 400);
+  } catch(e) { msg.innerHTML = `<span class="text-red-400 text-xs">${e.message}</span>`; }
+}
+
+function abrirModalCodigo(grupoId, nombre) {
+  _grupoSeleccionadoId = grupoId;
+  document.getElementById('modal-codigo-grupo-nombre').textContent = nombre;
+  document.getElementById('modal-codigo-input').value = '';
+  document.getElementById('modal-codigo-error').classList.add('hidden');
+  document.getElementById('modal-codigo-grupo').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-codigo-input').focus(), 100);
+}
+function cerrarModalCodigo() { document.getElementById('modal-codigo-grupo').classList.add('hidden'); }
+
+async function submitCodigoGrupo() {
+  const codigo = document.getElementById('modal-codigo-input').value.trim().toUpperCase();
+  const errEl = document.getElementById('modal-codigo-error');
+  if (!codigo) { errEl.textContent = 'Ingresá el código'; errEl.classList.remove('hidden'); return; }
+  errEl.classList.add('hidden');
+  try {
+    const g = await api('POST', '/grupos/unirse', { codigoDeAcceso: codigo });
+    cerrarModalCodigo();
+    toast('Te uniste a "' + g.nombre + '"');
+    loadGrupos();
+    setTimeout(() => loadGrupoRanking(g.id, g.nombre), 400);
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function loadGrupoRanking(grupoId, nombre) {
+  const sec = document.getElementById('grupo-ranking-section');
+  sec.classList.remove('hidden');
+  sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('grupo-nombre-display').textContent = nombre;
+  const tbody = document.getElementById('grupo-ranking-body');
+  tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-gray-600"><i class="fas fa-circle-notch spin"></i></td></tr>`;
+  try {
+    const ranking = await api('GET', `/ranking/grupo/${grupoId}`);
+    const medals = ['🥇','🥈','🥉'];
+    const maxPts = ranking?.[0]?.puntos || 1;
+    tbody.innerHTML = (ranking||[]).map((r, i) => {
+      const isMe = currentUser && r.nombre===currentUser.nombre && r.apellido===currentUser.apellido;
+      const pct  = Math.round((r.puntos / maxPts) * 100);
+      return `<tr class="rank-row ${isMe?'ring-1 ring-inset ring-blue-500/30':''}">
+        <td class="py-4 px-5 text-base">${i<3?medals[i]:`<span class="font-mono font-bold text-gray-500 text-sm">${r.posicion}</span>`}</td>
+        <td class="py-4 px-5">
+          <div class="font-semibold text-white text-sm">${r.nombre} ${r.apellido}</div>
+          ${isMe ? '<div class="text-xs text-blue-400 font-medium">← vos</div>' : ''}
+        </td>
+        <td class="py-4 px-5 text-center">
+          <span style="font-family:'Barlow Condensed',system-ui;font-size:1.5rem;font-weight:900;color:#fbbf24">${r.puntos}</span>
+          <span class="text-xs text-gray-600 ml-0.5">pts</span>
+          <div class="rank-bar-wrap w-20 mx-auto"><div class="rank-bar-fill" style="--bar-w:${pct}%"></div></div>
+        </td>
+        <td class="py-4 px-5 text-center font-semibold text-emerald-400 hidden sm:table-cell">${r.cantidadExactos}</td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="4" class="text-center py-8 text-gray-600">Sin participantes</td></tr>`;
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-red-400">${e.message}</td></tr>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// ADMIN
+// ═══════════════════════════════════════════════════
+async function loadAdmin() {
+  showAdminSub('equipos');
+  const [equipos, fechas] = await Promise.all([api('GET','/equipos'), api('GET','/fechas')]);
+  allEquipos = equipos || [];
+  allFechas  = fechas  || [];
+  renderEquiposAdmin();
+  renderFechasAdmin();
+  populatePartidoSelects();
+  loadPartidosAdmin();
+}
+
+function renderEquiposAdmin() {
+  document.getElementById('equipos-admin-list').innerHTML = !allEquipos.length
+    ? `<div class="text-center py-8 text-gray-700"><i class="fas fa-shield-alt text-4xl mb-2 block"></i><p class="text-xs">Sin equipos todavía</p></div>`
+    : allEquipos.map(e => `
+        <div class="flex items-center justify-between px-4 py-2.5 rounded-xl border border-gray-700/60 group" style="background:var(--surface2)">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center text-base overflow-hidden" style="background:rgba(59,130,246,.08)">
+              ${e.imagenUrl ? `<img src="${e.imagenUrl}" class="w-full h-full object-cover">` : `<span>${getFlag(e.nombre)}</span>`}
+            </div>
+            <div>
+              <div class="font-medium text-white text-sm">${e.nombre}</div>
+              ${e.abreviatura && e.abreviatura.trim() ? `<div class="font-mono text-xs text-gray-500">${e.abreviatura}</div>` : ''}
+            </div>
+          </div>
+          <button onclick="eliminarEquipo(${e.id})" title="Eliminar"
+            class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 w-8 h-8 flex items-center justify-center rounded-lg transition-all">
+            <i class="fas fa-trash text-xs"></i>
+          </button>
+        </div>`).join('');
+}
+
+function renderFechasAdmin() {
+  const badgeMap = { PROGRAMADA:'sb-azul', EN_JUEGO:'sb-verde', FINALIZADA:'sb-gris', APLAZADA:'sb-naranja' };
+  document.getElementById('fechas-admin-list').innerHTML = !allFechas.length
+    ? `<div class="text-center py-8 text-gray-700"><i class="fas fa-calendar text-4xl mb-2 block"></i><p class="text-xs">Sin jornadas todavía</p></div>`
+    : allFechas.map(f => `
+        <div class="flex items-center justify-between px-4 py-2.5 rounded-xl border border-gray-700/60" style="background:var(--surface2)">
+          <span class="font-medium text-white text-sm">${f.nombre}</span>
+          <div class="flex items-center gap-2">
+            <span class="sbadge ${badgeMap[f.estado]||'sb-gris'}">${f.estado}</span>
+            <button onclick="eliminarJornada(${f.id})" title="Eliminar jornada"
+              class="text-red-400 hover:text-red-300 border border-red-900/40 hover:border-red-700/60 px-2 py-1 rounded-lg text-xs transition-all">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </div>
+        </div>`).join('');
+}
+
+function populatePartidoSelects() {
+  const fOpts = allFechas.map(f => `<option value="${f.id}">${f.nombre}</option>`).join('');
+  const eOpts = allEquipos.map(e => `<option value="${e.id}">${e.nombre}</option>`).join('');
+  document.getElementById('partido-admin-fecha').innerHTML     = '<option value="">Seleccionar jornada...</option>' + fOpts;
+  document.getElementById('partido-admin-local').innerHTML     = '<option value="">Equipo local...</option>' + eOpts;
+  document.getElementById('partido-admin-visitante').innerHTML = '<option value="">Equipo visitante...</option>' + eOpts;
+}
+
+async function loadPartidosAdmin() {
+  const partidos = await api('GET', '/partidos');
+  allPartidos = partidos || [];
+  const badgeMap = { POR_JUGARSE:'sb-azul', APLAZADO:'sb-naranja', EN_JUEGO:'sb-verde', FINALIZADO:'sb-gris' };
+  document.getElementById('partidos-admin-list').innerHTML = !allPartidos.length
+    ? `<div class="text-center py-8 text-gray-700"><i class="fas fa-futbol text-4xl mb-2 block"></i><p class="text-xs">Sin partidos todavía</p></div>`
+    : allPartidos.map(p => {
+        const fecha = parseDate(p.fechaHoraInicio).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        const marcador = p.estado==='FINALIZADO' ? ` · ${p.golesLocal}–${p.golesVisitante}` : '';
+        let actions = '';
+        if (p.estado==='POR_JUGARSE' || p.estado==='APLAZADO') {
+          actions = `
+            <button onclick="openAplazarModal(${p.id})"
+              class="flex items-center gap-1.5 text-xs bg-amber-700 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl font-semibold transition-all">
+              <i class="fas fa-calendar-times"></i>Aplazar
+            </button>
+            <button onclick="iniciarPartido(${p.id})"
+              class="flex items-center gap-1.5 text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-semibold transition-all">
+              <i class="fas fa-play"></i>Iniciar
+            </button>`;
+        } else if (p.estado==='EN_JUEGO') {
+          actions = `<button onclick="openResultadoModal(${p.id})"
+            class="flex items-center gap-1.5 text-xs bg-orange-700 hover:bg-orange-600 text-white px-3 py-1.5 rounded-xl font-semibold transition-all">
+            <i class="fas fa-flag-checkered"></i>Resultado
+          </button>`;
+        }
+        return `<div class="flex items-center justify-between px-4 py-3 rounded-xl border border-gray-700/60 gap-3" style="background:var(--surface2)">
+          <div class="min-w-0">
+            <div class="font-semibold text-white text-sm truncate">${p.equipoLocalNombre} vs ${p.equipoVisitanteNombre}</div>
+            <div class="text-xs text-gray-600">${p.fechaNombre} · ${fecha}</div>
+          </div>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="sbadge ${badgeMap[p.estado]}">${p.estado.replace('_',' ')}${marcador}</span>
+            ${actions}
+          </div>
+        </div>`;
+      }).join('');
+}
+
+function previewEquipoImagen(url) {
+  const prev = document.getElementById('equipo-imagen-preview');
+  if (url) {
+    prev.innerHTML = `<img src="${url}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-exclamation-triangle\\' style=\\'color:#f87171\\'></i>'">`;
+  } else {
+    prev.innerHTML = '<i class="fas fa-image" style="color:#4b5563"></i>';
+  }
+}
+
+async function crearEquipo() {
+  const nombre      = document.getElementById('equipo-nombre').value.trim();
+  const abreviatura = document.getElementById('equipo-abreviatura').value.trim().toUpperCase() || null;
+  const imagenUrl   = document.getElementById('equipo-imagen').value.trim() || null;
+  if (!nombre) { toast('Ingresá el nombre del equipo', 'error'); return; }
+  try {
+    await api('POST', '/equipos', { nombre, abreviatura, imagenUrl });
+    toast('Equipo creado: ' + nombre);
+    document.getElementById('equipo-nombre').value   = '';
+    document.getElementById('equipo-abreviatura').value = '';
+    document.getElementById('equipo-imagen').value   = '';
+    document.getElementById('equipo-imagen-preview').innerHTML = '<i class="fas fa-image" style="color:#4b5563"></i>';
+    allEquipos = await api('GET', '/equipos') || [];
+    renderEquiposAdmin(); populatePartidoSelects();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function eliminarEquipo(id) {
+  if (!confirm('¿Eliminar este equipo?')) return;
+  try {
+    await api('DELETE', `/equipos/${id}`);
+    toast('Equipo eliminado');
+    allEquipos = await api('GET', '/equipos') || [];
+    renderEquiposAdmin(); populatePartidoSelects();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function eliminarJornada(id) {
+  if (!confirm('¿Eliminar esta jornada? Esta acción no se puede deshacer.')) return;
+  try {
+    await api('DELETE', `/fechas/${id}`);
+    toast('Jornada eliminada');
+    await loadAdminData();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function crearFecha() {
+  const nombre = document.getElementById('fecha-nombre').value.trim();
+  if (!nombre) { toast('Ingresá un nombre para la jornada', 'warn'); return; }
+  try {
+    await api('POST', '/fechas', { nombre });
+    toast('Jornada creada: ' + nombre);
+    document.getElementById('fecha-nombre').value = '';
+    allFechas = await api('GET', '/fechas') || [];
+    renderFechasAdmin(); populatePartidoSelects();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function crearPartidoAdmin() {
+  const fechaId           = parseInt(document.getElementById('partido-admin-fecha').value);
+  const equipoLocalId     = parseInt(document.getElementById('partido-admin-local').value);
+  const equipoVisitanteId = parseInt(document.getElementById('partido-admin-visitante').value);
+  const fechaHoraStr      = document.getElementById('partido-admin-hora').value;
+  if (!fechaId || !equipoLocalId || !equipoVisitanteId || !fechaHoraStr) {
+    toast('Completá todos los campos', 'warn'); return;
+  }
+  const fechaHoraInicio = new Date(fechaHoraStr).toISOString().slice(0,19);
+  try {
+    await api('POST', '/partidos', { fechaId, equipoLocalId, equipoVisitanteId, fechaHoraInicio });
+    toast('Partido creado');
+    loadPartidosAdmin();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function iniciarPartido(id) {
+  if (!confirm('¿Iniciar el partido? Los pronósticos quedarán bloqueados.')) return;
+  try {
+    await api('PATCH', `/partidos/${id}/iniciar`);
+    toast('Partido iniciado');
+    loadPartidosAdmin();
+    if (!document.getElementById('tab-partidos').classList.contains('hidden')) loadPartidos();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closePronosticoModal(); closeResultadoModal(); closeAplazarModal(); cerrarModalCodigo(); }
+  if (e.key === 'Enter' && !document.getElementById('auth-screen').classList.contains('hidden')) {
+    if (!document.getElementById('form-login').classList.contains('hidden')) login();
+    else register();
+  }
+});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+if (token && currentUser) showApp();
+</script>
+</body>
+</html>
